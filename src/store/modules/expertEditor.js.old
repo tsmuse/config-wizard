@@ -1,0 +1,24 @@
+import * as types from '../mutation-types';
+
+export const mutations = {
+  [types.UPDATE_CURRENT_LINE](state, payload) {
+    state.currentLine = payload.newLine;
+  },
+};
+
+export default {
+  state: {
+    // currentLine is shared, it should live in a higher order component than this
+    currentLine: -1, // lines should always be >= 0 when coming back from the editor
+    config: { // this is just an example. The keys here are generated 
+      server: ';some comment\n\n[server]\nprop1 = \nprop2 = \nprop3 =',
+    },
+  },
+  getters: {
+    currentLine : state => state.currentLine,
+    currentConfig : (state) => (id) => {
+      return state.config[id];
+    },
+  },
+  mutations,
+};
