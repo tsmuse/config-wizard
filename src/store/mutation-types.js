@@ -1,6 +1,7 @@
 //General Onboarding App mutations
 export const UPDATE_CURRENT_OB_SECTION = 'UPDATE_CURRENT_OB_SECTION';
 export const UPDATE_OB_CONFIG_PATH = 'UPDATE_OB_CONFIG_PATH';
+export const UPDATE_OB_CAN_GO_NEXT = 'UPDATE_OB_CAN_GO_NEXT';
 
 // Welcome screen mutations
 export const UPDATE_SENDER_EMAIL = 'UPDATE_SENDER_EMAIL';

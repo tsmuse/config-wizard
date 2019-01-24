@@ -13,6 +13,9 @@ export const mutations = {
   [types.UPDATE_SERVER_ADDRESS](state, payload) {
     state.config.server.address = payload.newServerAddress;
   },
+  [types.UPDATE_OB_CAN_GO_NEXT](state, payload) {
+    state.canGoNext = payload.newCanGoNext;
+  },
 };
 
 export default {
@@ -61,6 +64,7 @@ export default {
       email: 'sendmail',
       auth: 'password',
     },
+    canGoNext: false,
     
   },
   getters: {},

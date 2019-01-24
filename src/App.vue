@@ -4,23 +4,43 @@
       <!-- router-view changes the form that is displayed only -->
       <router-view/>
       <!-- <button class="primary-button" @click="updatePage" :disabled="nextBtnDisabled">Next: {{nextSectionLabel}} </button> -->
-      <button class="primary-button" @click="moveToNext">Next: {{nextSectionLabel}} </button>
+      <button class="primary-button" @click="moveToNext" :disabled="!canGoNext">Next: {{nextSectionLabel}} </button>
 
     </div>
   </div>
 </template>
 <script>
+  import { mapState } from 'vuex';
+
   export default {
     computed: {
       nextSectionLabel() {
         return 'this is a test label';
       },
+      nextTarget() {
+        switch(this.currentSection){
+          case 'welcome': 
+            return 'email';
+          case 'email':
+            return 'auth';
+          // other sections would go here as they get decided/added
+          default:
+            return 'summary';
+        }
+      },
+      ...mapState({
+        currentSection: state => state.onboarding.currentSection,
+        canGoNext: state => state.onboarding.canGoNext,
+      })
     },
     methods: {
       moveToNext() {
         // some form validation checking goes here. The forms should be able to report it so this 
         // should only be asking the form component if it's valid then moving on iff true
-        console.debug('moving on to the next section, boss');
+        let target = this.nextTarget;
+        this.$store.commit('UPDATE_CURRENT_OB_SECTION', { newSection: target });
+        this.$router.push({ path: target });
+        
       },
     },
   };

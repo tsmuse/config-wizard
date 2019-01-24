@@ -5,6 +5,7 @@ import Router from 'vue-router'
 // import Test from './Test.vue';
 // import Onboarding from './views/Onboarding';
 import Welcome from './views/Welcome';
+import PathChoice from './views/PathChoice';
 
 Vue.use(Router)
 
@@ -16,6 +17,11 @@ export default new Router({
       path: '/',
       name: 'welcome',
       component: Welcome,
+    },
+    {
+      path: '/email',
+      name: 'email',
+      component: PathChoice
     },
     // {
     //   path: '/v0',
