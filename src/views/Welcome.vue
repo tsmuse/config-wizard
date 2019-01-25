@@ -49,19 +49,11 @@
     },
     props: {},
     methods: {
-      updateConfigPath( update ){
-        let newPath = { ...this.configPath };
-        let { id, value } = update;
-        newPath[id] = value;
-        this.$store.commit('UPDATE_OB_CONFIG_PATH', { newConfigPath: newPath });
-      },
       updateServerAddress( evt ){
-        console.debug(evt.target.value);
-        // this.$store.commit('UPDATE_SERVER_ADDRESS', { newServerAddress:  })
+        this.$store.commit('UPDATE_SERVER_ADDRESS', { newServerAddress: evt.target.value })
       },
-      updateSenderEmail( evt) {
-        console.debug(evt.target.value);
-        // this.$store.commit('UPDATE_SENDER_EMAIL', { newSenderEmail:  })
+      updateSenderEmail( evt ) {
+        this.$store.commit('UPDATE_SENDER_EMAIL', { newSenderEmail: evt.target.value })
       },
     },
     computed: {
@@ -69,9 +61,6 @@
         serverAddress: state => state.onboarding.config.server.address,
         senderEmail: state => state.onboarding.config.server.senderEmail,
         configPath: state => state.onboarding.configPath,
-        configPathWeb: state => state.onboarding.configPath.web,
-        configPathEmail: state => state.onboarding.configPath.email,
-        configPathAuth: state => state.onboarding.configPath.auth,
       })
     },
     created(){
@@ -83,50 +72,8 @@
     },
     data (){
       return {
-        // pathOptions would be populated by asking the server for them on Created
-        pathOptions: {
-          emailOptions: [
-            {
-              label: 'Sendmail',
-              value: 'sendmail',
-              explainer: 'Use Sendmail for this Rstudio Connect Server. This requires no additional configurations inside RStudio Connect',
-            },
-            {
-              label: 'SMTP',
-              value: 'smtp',
-              explainer: 'Use SMTP for this Rstudio Connect Server. This requires your provide a server address, port, type of security used (SSL, FastTSL, or none), and possibly a user name and password.',
-            },
-          ],
-          httpOptions: [
-            {
-              label: 'HTTP',
-              value: 'http',
-              explainer: 'Serve pages over HTTP. WARNING: Serving pages this way is insecure, security warning here!',
-            },
-            {
-              label: 'HTTPS',
-              value: 'https',
-              explainer: 'Serve pages over HTTPS. This requires your provide a security certifical file, an SSL key, a port to broadcast on, or an external HTTPS provider (e.g. a load-balancer)',
-            },
-          ],
-          authOptions: [
-            {
-              label: 'Password',
-              value: 'password',
-              explainer: 'Users will log in with a username and password they establish with this RStudio connect server',
-            },
-            {
-              label: 'OAuth2',
-              value: 'oauth2',
-              explainer: 'Users will be able to log in with a supported OAuth2 account (e.g. a Google Account.) This requires you provide a clientID and a clientSecret.',
-            },
-            {
-              label: 'LDAP',
-              value: 'ldap',
-              explainer: 'Users will be able to log in with their existing LDAP credentials. This requires you to provide an LDAP server address including a port to use, LDAP User Schema, Distingused Names for users and groups that will have access to this RStudio Connect server.',
-            },
-          ],
-        },
+        
+        
       };
     },
   };

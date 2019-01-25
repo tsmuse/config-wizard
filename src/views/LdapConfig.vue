@@ -158,12 +158,11 @@
   </div>
 </template>
 <script>
-  import { RadioButtonGroup, TreeishSelector } from 'rsconnect_storybook';
+  import { TreeishSelector } from 'rsconnect_storybook';
 
   export default {
     name: 'ldap-config',
     components: {
-      RadioButtonGroup,
       TreeishSelector,
     },
     props: {},

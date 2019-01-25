@@ -13,28 +13,67 @@
     </p>
     
     <div class="form-group">
-      <label class="form-label" for="https-port">Port</label>
-      <input type="number" id="https-port" ref="httpPort" min="0" required v-model="http.port"/>
+      <label class="form-label" for="http-port">Port</label>
+      <input 
+        type="number" 
+        id="http-port" 
+        ref="httpPort" 
+        min="0" 
+        :value="currentHttpConfig.port"
+        @change="handleFieldChange"
+        required 
+      />
     </div>
     <div class="form-group" v-if="showCertKey">
-      <label class="form-label" for="https-cert">Path to TLS Certificate</label>
-      <input type="text" id="https-cert" ref="httpCert" minlength="1" required v-model="http.pathToCert"/>
+      <label class="form-label" for="http-cert">Path to TLS Certificate</label>
+      <input 
+        type="text" 
+        id="http-cert" 
+        ref="httpCert" 
+        minlength="1" 
+        :value="currentHttpConfig.cert"
+        @change="handleFieldChange"
+        required 
+      />
     </div>
 
     <div class="form-group" v-if="showCertKey">
-      <label class="form-label" for="https-key">Path to Private Key</label>
-      <input type="text" id="https-key" ref="httpKey" minlength="1" required  v-model="http.pathToKey"/>
+      <label class="form-label" for="http-key">Path to Private Key</label>
+      <input 
+        type="text" 
+        id="http-key" 
+        ref="httpKey" 
+        minlength="1" 
+        :value="currentHttpConfig.key"
+        @change="handleFieldChange"
+        required  
+      />
     </div>
     <div class="form-group">
-      <input type="checkbox" id="ext-https" :selected="http.ext" @change="updateExt" />
-      <label class="form-label" for="ext-https">Use https provided by an external source (e.g. a load balancer)</label>
+      <fancy-checkbox 
+        name="forceSecure"
+        label="Use https provided by an external source (e.g. a load balancer)"
+        :value="currentHttpConfig.forceSecure"
+        :callback="updateHttpConfig"
+      />
+      <!-- <input 
+        type="checkbox" 
+        id="http-forceSecure" 
+        :selected="currentHttpConfig.forceSecure" 
+        @change="handleFieldChange" 
+      />
+      <label class="form-label" for="http-ext">
+        Use https provided by an external source (e.g. a load balancer)
+      </label> -->
     </div>
     <div class="form-group">
-      <input type="checkbox" id="http-insecure" :selected="http.insecure" @change="updateAgreement" />
-      <label class="form-label" for="ext-insecure">
-        I want to serve RStudio Connect over HTTP. I understand that HTTP connections are insecure 
-        and that all my data might get hacked by l33t hax0rs, then I will be forever p0wned.
-      </label>
+      <fancy-checkbox 
+        name="insecure"
+        label="I want to serve RStudio Connect over HTTP. I understand that HTTP connections are 
+        insecure and that all my data might get hacked by l33t hax0rs, then I will be forever p0wned."
+        :value="insecure"
+        :callback="updateAgreement"
+      />
     </div>
     <button class="secondary-button" @click="verifyHTTP">
       Verify {{transportType}} settings
@@ -50,8 +89,13 @@
   </div>
 </template>
 <script>
+  import { mapState } from 'vuex';
+  import { FancyCheckbox } from 'rsconnect_storybook';
   export default {
     name: 'https-config',
+    components: {
+      FancyCheckbox,
+    },
     props: {},
     methods: {
       clearNext(){
@@ -60,24 +104,22 @@
       blockNext(){
         this.$store.commit('UPDATE_OB_CAN_GO_NEXT', { newCanGoNext: false });
       },
-      checkHttps( details ){
+
+      checkHttps(){
         // this will be some kind of call to the server to validate that the https details are valid
         // for now it just always returns true
-        details; // this is to get ESLint to stop yelling
         return true;
       },
       verifyHTTP(){
         let portValid = this.$refs.httpPort.checkValidity();
-        let { ext, insecure } = this.http;
-        
         // this logic feels really sloppy
         if( portValid ){
-          if( insecure ){
+          if( this.insecure ){
             this.showInsecureBlock = true;
           }
-          else if ( ext ){
+          else if ( this.currentHttpConfig.forceSecure ){
             // this will be a async function call...assuming I can use Async/Await in this environment 
-            this.showReadyBlock = this.checkHttps( this.http );
+            this.showReadyBlock = this.checkHttps();
           }
           // Not sure if we can validate the external https or not...We should be able to?
           else {
@@ -85,7 +127,7 @@
             let certValid = this.$refs.httpCert.checkValidity();
             // this will be a async function call...assuming I can use Async/Await in this environment 
             if( keyValid && certValid ){
-              this.showReadyBlock = this.checkHttps( this.http );
+              this.showReadyBlock = this.checkHttps();
             }
           }
           if ( this.showInsecureBlock || this.showReadyBlock ){
@@ -93,47 +135,59 @@
           } 
         }
       },
-      updateExt(){
-        this.http.ext = !this.http.ext;
-        if(this.http.ext){
-          this.http.port = 443;
-        }
+      handleFieldChange( evt ){
+        let id = evt.target.id.split('-')[1],
+          value = evt.target.value;
+        this.updateHttpConfig( { id, value });
       },
-      updateAgreement(){
-        this.http.insecure = !this.http.insecure;
-        if (this.http.insecure ){
-          this.http.ext = this.http.ext ? !this.http.ext : this.http.ext;
-          this.http.port = '80';
+      updateHttpConfig( update ){
+        let newHttpConfig = { ...this.currentHttpConfig },
+          { id, value } = update;
+        
+        newHttpConfig[id] = value;
+        this.$store.commit('UPDATE_HTTP_CONFIG',{ newHttpConfig });
+      },
+      // updateExt(){
+      //   this.http.ext = !this.http.ext;
+      //   if(this.http.ext){
+      //     this.http.port = 443;
+      //   }
+      // },
+      updateAgreement( update ){
+        this.insecure = update.value;
+        if ( this.insecure ){
+          this.updateHttpConfig({ key: 'port', value: '80' });
+          this.updateHttpConfig({ key: 'forceSecure', value: false });
+          // this.http.ext = this.http.ext ? !this.http.ext : this.http.ext;
+          // this.http.port = '80';
         }
         else {
-          this.http.port = '443';
+          // this.http.port = '443';
+          this.updateHttpConfig({ key: 'port', value: '443' });
         }
         
       },
     },
     computed: {
       transportType(){
-        if( this.http.insecure ){
+        if( this.insecure ){
           return 'HTTP';
         }
         return 'HTTPS';
       },
       showCertKey(){
-        if( this.http.insecure || this.http.ext ){
+        if( this.insecure || this.currentHttpConfig.forceSecure ){
           return false;
         }
         return true;
       },
+      ...mapState({
+        currentHttpConfig: state => state.onboarding.config.http,
+      })
     },
     data(){
       return {
-        http: {
-          port: '443',
-          ext: false,
-          pathToCert: '',
-          pathToKey: '',
-          insecure: false,
-        },
+        insecure: false,
         showReadyBlock: false,
         showInsecureBlock: false,
       };

@@ -7,6 +7,12 @@ export const UPDATE_OB_CAN_GO_NEXT = 'UPDATE_OB_CAN_GO_NEXT';
 export const UPDATE_SENDER_EMAIL = 'UPDATE_SENDER_EMAIL';
 export const UPDATE_SERVER_ADDRESS = 'UPDATE_SERVER_ADDRESS';
 
+// Http/s mutations
+export const UPDATE_HTTP_CONFIG = 'UPDATE_HTTP_CONFIG';
+
+// SMTP mutations
+export const UPDATE_EMAIL_CONFIG = 'UPDATE_EMAIL_CONFIG';
+
 
 // these are only here to keep the first pass at this prototype functional
 // general App mutations (is this the right place for these?)

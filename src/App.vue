@@ -17,30 +17,43 @@
       nextSectionLabel() {
         return 'this is a test label';
       },
-      nextTarget() {
-        switch(this.currentSection){
-          case 'welcome': 
-            return 'email';
+      nextSection() {
+        let splitRoute = this.currentRoute.split('/');
+        let path = this.configPath;
+        switch(splitRoute[1]){
+          case '':
+            return '/email';
           case 'email':
-            return 'auth';
-          // other sections would go here as they get decided/added
+            if (splitRoute.length > 2){
+              return '/auth';
+            }
+            else {
+              return `/email/${path.email}`;
+            }
+          case 'auth':
+            if(splitRoute.length > 2){
+              return '/summary';
+            } 
+            else{
+              return `/auth/${path.auth}`;
+            }
           default:
-            return 'summary';
+            return '/';
         }
       },
+      // this is for debugging, delete me
+      currentRoute(){
+        return this.$route.path;
+      },
       ...mapState({
-        currentSection: state => state.onboarding.currentSection,
         canGoNext: state => state.onboarding.canGoNext,
+        configPath: state => state.onboarding.configPath,
       })
     },
     methods: {
       moveToNext() {
-        // some form validation checking goes here. The forms should be able to report it so this 
-        // should only be asking the form component if it's valid then moving on iff true
-        let target = this.nextTarget;
-        this.$store.commit('UPDATE_CURRENT_OB_SECTION', { newSection: target });
-        this.$router.push({ path: target });
         
+        this.$router.push({ path: this.nextSection });
       },
     },
   };
@@ -82,9 +95,6 @@
     margin-bottom: 0.5rem;
     .form-label {
       display:block;
-    }
-    input {
-      display: block;
     }
   }
 

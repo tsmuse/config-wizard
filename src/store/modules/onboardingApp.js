@@ -16,6 +16,12 @@ export const mutations = {
   [types.UPDATE_OB_CAN_GO_NEXT](state, payload) {
     state.canGoNext = payload.newCanGoNext;
   },
+  [types.UPDATE_EMAIL_CONFIG](state, payload) {
+    state.config.email = payload.newEmailConfig;
+  },
+  [types.UPDATE_HTTP_CONFIG](state, payload) {
+    state.config.http = payload.newHttpConfig;
+  },
 };
 
 export default {
@@ -36,13 +42,10 @@ export default {
         password: '',
       },
       http: {
-        port: 80,
-        forceSecure: false,
-      },
-      https: {
         port: 443,
         key: '',
         cert: '',
+        forceSecure: false,
       },
       authentication: {
         provider: 'password',
@@ -58,11 +61,9 @@ export default {
         groupObjectAttributes: {},
       },
     },
-    currentSection: 'welcome',
     configPath: {
-      web: 'https',
-      email: 'sendmail',
-      auth: 'password',
+      email: '',
+      auth: '',
     },
     canGoNext: false,
     

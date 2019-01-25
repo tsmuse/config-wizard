@@ -6,6 +6,8 @@ import Router from 'vue-router'
 // import Onboarding from './views/Onboarding';
 import Welcome from './views/Welcome';
 import PathChoice from './views/PathChoice';
+import SmtpConfig from './views/SmtpConfig';
+import LdapConfig from './views/LdapConfig';
 
 Vue.use(Router)
 
@@ -23,6 +25,33 @@ export default new Router({
       name: 'email',
       component: PathChoice
     },
+    {
+      path: '/email/sendmail',
+      redirect: '/auth',  
+    },
+    {
+      path: '/email/smtp',
+      name:'smtp',
+      component: SmtpConfig
+    },
+    {
+      path: '/auth',
+      name: 'auth',
+      component: PathChoice
+    },
+    {
+      path: '/auth/password',
+      redirect: '/summary'
+    },
+    {
+      path: '/auth/oauth',
+      redirect: '/auth/ldap'
+    },
+    {
+      path: 'auth/ldap',
+      name: 'ldap',
+      component: LdapConfig
+    }
     // {
     //   path: '/v0',
     //   name: 'v0config',
