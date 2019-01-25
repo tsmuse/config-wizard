@@ -48,7 +48,7 @@ export default new Router({
       redirect: '/auth/ldap'
     },
     {
-      path: 'auth/ldap',
+      path: '/auth/ldap',
       name: 'ldap',
       component: LdapConfig
     }

@@ -37,11 +37,11 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="ldap-bindDN">Bind DN or User</label>
-          <input type="text" id="ldap-bindDN" vmodel="config.ldap.bindDN" />
+          <input type="text" id="ldap-bindDN" v-model="config.ldap.bindDN" />
         </div>
         <div class="form-group">
           <label class="form-label" for="ldap-bindPW">Password</label>
-          <input type="password" id="ldap-bindPW" vmodel="config.ldap.bindPassword" />
+          <input type="password" id="ldap-bindPW" v-model="config.ldap.bindPassword" />
         </div>
         <button class="primary-button" @click="verifyLDAP">Verify LDAP connection</button>
       </div>
@@ -166,8 +166,87 @@
       TreeishSelector,
     },
     props: {},
-    methods: {},
+    methods: {
+      ldapServerAddress(){},
+      verifyLDAP(){},
+      updateLDAPConnectionSec(){},
+      handleUserGroupSelected(){},
+      selectLDAPObject(){},
+      editLDAPObjectAttribute(){},
+      confirmLDAPObject(){},
+      resetLDAPObject(){},
+      updateLDAPAttribute(){},
+      cancelEditAttribute(){},
+    },
     computed: {},
+    data(){
+      return {
+        config: {
+        server: {
+          senderEmail: '',
+          address: '',
+        },
+        email: {
+          provider: 'sendmail',
+          server: '',
+          port: 465,
+          connection: 'ssl',
+          username: '',
+          password: '',
+        },
+        http: {
+          port: 80,
+          forceSecure: false,
+        },
+        https: {
+          port: 443,
+          key: '',
+          cert: '',
+        },
+        authentication: {
+          provider: 'password',
+        },
+        ldap: {
+          serverAddress: '',
+          tls: true,
+          startTLS: false,
+          TLSCACertificate: '',
+          bindDN: '',
+          bindPassword: '',
+          userObjectAttributes: {},
+          groupObjectAttributes: {},
+        },
+      },
+      ldapFormPosition: 1,
+      ldapFormLastPos: 0,
+      ldapFormState: [
+        'editAttribute',
+        'serverSettings',
+        'userObject',
+        'userAttributes',
+        'groupObject',
+        'groupAttributes',
+        'userSelection',
+      ],
+      attributeEditing: '',
+      currentLDAPSelected: '',
+      correctedAttribute: '',
+      selectedLDAPObject: {},
+      pendingLDAPObjectAttribs: {},
+      httpChoice: 'http', // the http/https sections of the config file don't have a provider, so...
+      extHTTPS: 'std',
+      ldapHost: '',
+      ldapPort: '',
+      showWelcome: true,
+      showSMTP: false,
+      showLDAP: false,
+      showHTTP: false,
+      showHTTPS: false,
+      };
+    },
+    created(){
+      console.debug('ldap was created');
+    },
   };
 </script>
 <style lang="scss">

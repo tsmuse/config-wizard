@@ -13,6 +13,8 @@ export const UPDATE_HTTP_CONFIG = 'UPDATE_HTTP_CONFIG';
 // SMTP mutations
 export const UPDATE_EMAIL_CONFIG = 'UPDATE_EMAIL_CONFIG';
 
+// LDAP mutations
+export const UPDATE_LDAP_CONFIG = 'UPDATE_LDAP_CONFIG';
 
 // these are only here to keep the first pass at this prototype functional
 // general App mutations (is this the right place for these?)

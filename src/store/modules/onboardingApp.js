@@ -22,6 +22,9 @@ export const mutations = {
   [types.UPDATE_HTTP_CONFIG](state, payload) {
     state.config.http = payload.newHttpConfig;
   },
+  [types.UPDATE_LDAP_CONFIG](state, payload) {
+    state.condig.ldap = payload.newLdapConfig;
+  },
 };
 
 export default {
@@ -55,10 +58,33 @@ export default {
         tls: true,
         startTLS: false,
         TLSCACertificate: '',
+        serverTLSInsecure: false,
         bindDN: '',
         bindPassword: '',
-        userObjectAttributes: {},
-        groupObjectAttributes: {},
+        bindPasswordFile: '',
+        anonymoudBind: false,
+        userObjectAttributes: {
+          userFirstNameAttribute: '',
+          userLastNameAttribute: '',
+          userEmailAttribute: '',
+          usernameAttribute: '',
+        },
+        groupObjectAttributes: {
+          groupNameAttribute: '',
+          groupUniqueIdAttribute: 'DN',
+        },
+        userObjectClass: '',
+        userFilterBase: '',
+        uniqueIdAttribute: 'DN',
+        userSearchBaseDN: '',
+        permittedLoginGroup: '',
+        groupObjectClass: '',
+        groupSearchBaseDN: '',
+        groupFilterBase: '',
+        logging: false,
+        webSudoMode: true,
+        webSudoDuration: '5m',
+        registerOnFirstLogin: false,
       },
     },
     configPath: {
