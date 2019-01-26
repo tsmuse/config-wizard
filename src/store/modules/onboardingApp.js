@@ -23,7 +23,7 @@ export const mutations = {
     state.config.http = payload.newHttpConfig;
   },
   [types.UPDATE_LDAP_CONFIG](state, payload) {
-    state.condig.ldap = payload.newLdapConfig;
+    state.config.ldap = payload.newLdapConfig;
   },
 };
 
@@ -62,7 +62,7 @@ export default {
         bindDN: '',
         bindPassword: '',
         bindPasswordFile: '',
-        anonymoudBind: false,
+        anonymousBind: false,
         userObjectAttributes: {
           userFirstNameAttribute: '',
           userLastNameAttribute: '',
