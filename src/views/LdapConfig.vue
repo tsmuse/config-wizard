@@ -93,41 +93,6 @@
         </div>
         <button class="primary-button" @click="verifyLDAP">Verify LDAP connection</button>
       </div>
-      <!-- Object selection for attribute extraction -->
-      <div 
-        :class="[
-          'ldap-form-group', 
-          {visible: ldapSectionToShow === 'userObject' || ldapSectionToShow === 'groupObject'},
-        ]"
-      >
-        <div class="form-group">
-          <label class="form-label" for="ldap-user-group-selector">
-            Select a {{ldapSectionToShow === 'userObject' ? 'user' : 'group'}}. We will use it 
-            to verify RStudio Connect can find all the info it needs
-          </label>
-          <div class="flex-group">
-            <treeish-selector 
-              id="ldap-user-group-selector" 
-              class="ldap-tree-selector"
-              :tree="fakeLDAPTree" 
-              :selected-callback="handleUserGroupSelected" 
-            />
-            <table class="ldap-selected-preview">
-              <tr 
-                class="ldap-object-attribute" 
-                v-for="( value, idx ) in currentLDAPSelected.metadata"
-                :key="idx"
-              >
-                <td>{{value.attribute}}</td>
-                <td>{{value.value}} </td>
-              </tr>
-            </table>
-          </div>
-          <button class="primary-button" @click="selectLDAPObject">
-            Select {{currentLDAPSelected.label}}
-          </button>
-        </div>
-      </div>
 
       <!-- Object Attribute confirmation -->
       <div 
@@ -141,120 +106,133 @@
           <thead>
             <th>Unique ID Attribute</th>
           </thead>
-          <tr class="ldap-object-attribute" >
-            <!-- this whole pattern feels perfect for a component -->
-            <td>UniqueIdAttribute</td>
-            <td v-if="editingAttribute !== 'uniqueIdAttribute'">{{currentLdapConfig.uniqueIdAttribute}}</td>
-            <td v-if="editingAttribute !== 'uniqueIdAttribute'"><button @click="editLDAPObjectAttribute('uniqueIdAttribute')">change</button></td>
-            <td v-if="editingAttribute === 'uniqueIdAttribute'">
-              <select name="uniqueIdAttribute" :value="currentLdapConfig.uniqueIdAttribute" @change="updateAttribute">
-                <option v-for="(attr, idx) in possibleAttributes" :key="idx" :value="attr">
-                  {{attr}}
-                </option>
-              </select>
-            </td>
-          </tr>
+          <object-attribute-editor
+            attributeName="uniqueIdAttribute"
+            :attributeValue="currentLdapConfig.uniqueIdAttribute"
+            :possibleValues="possibleAttributes"
+            :callback="updateLdapConfig"
+          />
         </table>
         <table class="ldap-object-attributes">
           <thead>
             <th>User Object</th>
           </thead>
-          <tr class="ldap-object-attribute" >
-            <td>UserObjectClass</td>
-            <td>{{currentLdapConfig.userObjectClass}}</td>
-            <td><button @click="editLDAPObjectAttribute('userObjectClass')">change</button></td>
-          </tr>
-          <tr 
-            class="ldap-object-attribute" 
+          <object-attribute-editor
+            attributeName="userObjectClass"
+            :attributeValue="currentLdapConfig.userObjectClass"
+            :possibleValues="possibleAttributes"
+            :callback="updateLdapConfig"
+          />
+          <object-attribute-editor
             v-for="(value, key, idx) in currentLdapConfig.userObjectAttributes" 
             :key="idx"
-          >
-            <td>{{key}}</td>
-            <td>{{value}} </td>
-            <td><button @click="editLDAPObjectAttribute(key)">change</button></td>
-          </tr>
+            :attributeName="`userObjectAttributes.${key}`"
+            :attributeValue="value"
+            :possibleValues="possibleAttributes"
+            :callback="updateLdapConfig"
+          />
         </table>
         <table class="ldap-object-attributes">
           <thead>
             <th>Group Object</th>
           </thead>
-          <tr class="ldap-object-attribute" >
-            <td>GroupObjectClass</td>
-            <td>{{currentLdapConfig.groupObjectClass}}</td>
-            <td><button @click="editLDAPObjectAttribute('groupObjectClass')">change</button></td>
-          </tr>
-          <tr 
-            class="ldap-object-attribute" 
+          <object-attribute-editor
+            attributeName="groupObjectClass"
+            :attributeValue="currentLdapConfig.groupObjectClass"
+            :possibleValues="possibleAttributes"
+            :callback="updateLdapConfig"
+          />
+          <object-attribute-editor
             v-for="(value, key, idx) in currentLdapConfig.groupObjectAttributes" 
             :key="idx"
-          >
-            <td>{{key}}</td>
-            <td>{{value}} </td>
-            <td><button @click="editLDAPObjectAttribute(key)">change</button></td>
-          </tr>
+            :attributeName="`groupObjectAttributes.${key}`"
+            :attributeValue="value"
+            :possibleValues="possibleAttributes"
+            :callback="updateLdapConfig"
+          />
         </table>
-        <button class="primary-button" @click="confirmLDAPObject">Confirm</button>
         <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
+        <button class="primary-button" @click="confirmLDAPObject">Confirm</button>
+        
       </div>
 
-      <!-- Object Attribute editing -->
-      <div :class="['ldap-form-group', {visible: ldapSectionToShow === 'editAttribute' }]">
-        <div class="flex-group">
-          <div class="form-group">
-            <label class="form-label">Select the correct value for {{attributeEditing}}</label>
-            <select size="7" v-model="correctedAttribute">
-              <option 
-                v-for="(value, idx) of currentLDAPSelected.metadata" 
-                :key="idx" 
-                :value="value.attribute"
-              >
-                {{value.attribute}}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">
-              {{ ldapFormState.groupObjectSelected ? 'Group' : 'User' }} Object you selected
-            </label>
-            <table class="ldap-selected-preview">
-              <tr 
-                class="ldap-user-attribute" 
-                v-for="( value, idx ) in currentLDAPSelected.metadata"
-                :key="idx"
-              >
-                <td>{{value.attribute}}</td>
-                <td>{{value.value}} </td>
-              </tr>
-            </table>
-          </div>
-        </div>
-        <button class="primary-button" @click="updateLDAPAttribute">Select</button>
-        <button class="secondary-button" @click="cancelEditAttribute">Cancel</button>
-      </div>
+      
       <!-- User and Group selection -->
       <div :class="['ldap-form-group', {visible: ldapSectionToShow === 'userSelection'}]">
-        <!-- <div class="form-group">
-          <label class="form-label">
-            Select users and groups that will have access to this RStudio Connect server
-          </label>
-          <select size="7" multiple >
-            <optgroup label="Groups">
-              <option v-for="(group, idx) in fakeDivinedGroups" :key="idx" :value="group.value">
-                {{group.label}}
-              </option>
-            </optgroup>
-            <optgroup label="Users">
-              <option v-for="(user, idx) in fakeDivinedUsers" :key="idx" :value="user.value">
-                {{user.label}}
-              </option>
-            </optgroup>
-          </select>
-        </div> -->
+        <treeish-selector 
+              id="ldap-user-group-selector" 
+              class="ldap-tree-selector"
+              :tree="fakeLDAPTree" 
+              :selected-callback="handleUserGroupSelected" 
+        />
+        <div class="form-group">
+          <label class="form-label" for="ldap-userSearchBaseDN">User Search Base DN</label>
+          <input 
+            id="ldap-userSearchBaseDN" 
+            type="text" 
+            :value="currentLdapConfig.userSearchBaseDN" 
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ldap-groupSearchBaseDN">User Search Base DN</label>
+          <input 
+            id="ldap-groupSearchBaseDN" 
+            type="text" 
+            :value="currentLdapConfig.groupSearchBaseDN" 
+          />
+        </div>
+        <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
+        <button class="primary-button" @click="confirmLDAPSearchStrings">Confirm</button>
+      </div>
+
+      <!-- Misc Settings == I'm not sure if these have a better spot somewhere else -->
+      <div :class="['ldap-form-group', {visible: ldapSectionToShow === 'miscSettings'}]">
+        <div class="form-group">
+          <fancy-checkbox 
+            name="webSudoMode"
+            label="Use WebSudo Mode"
+            :value="currentLdapConfig.webSudoMode"
+            :callback="updateLdapConfig"
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="ldap-groupSearchBaseDN">WebSudo Mode Duration (in seconds)</label>
+          <input 
+            id="ldap-webSudoDuration" 
+            type="number" 
+            :value="currentLdapConfig.webSudoDuration" 
+          />
+        </div>
+        <div class="form-group">
+          <fancy-checkbox 
+            name="registerOnFirstLogin"
+            label="Allow users to Register on First Login"
+            :value="currentLdapConfig.registerOnFirstLogin"
+            :callback="updateLdapConfig"
+          />
+        </div>
+        <div class="form-group">
+          <fancy-checkbox 
+            name="logging"
+            label="Enable logging"
+            :value="currentLdapConfig.logging"
+            :callback="updateLdapConfig"
+          />
+        </div>
+        <div class="form-group">
+          <fancy-checkbox 
+            name="serverTLSInsecure"
+            label="Accept any certificate presented by the server and any host name in that certificate. Enabling this setting will make your server susceptible to man-in-the-middle attacks but is required in some circumstances, such as when using a self-signed certificate."
+            :value="currentLdapConfig.serverTLSInsecure"
+            :callback="updateLdapConfig"
+          />
+        </div>
       </div>
   </div>
 </template>
 <script>
   import { TreeishSelector, FancyCheckbox } from 'rsconnect_storybook';
+  import ObjectAttributeEditor from '../components/ObjectAttributeEditor';
   import { mapState } from 'vuex';
 
   export default {
@@ -262,6 +240,7 @@
     components: {
       TreeishSelector,
       FancyCheckbox,
+      ObjectAttributeEditor,
     },
     props: {},
     methods: {
@@ -308,7 +287,11 @@
         
         if( !fakeresponse.error ){
           let newLdapConfig = { ...this.currentLdapConfig };
-          newLdapConfig = { ...fakeresponse.ldapConfig };
+          // newLdapConfig = { ...fakeresponse.ldapConfig };
+          let responseConfig = fakeresponse.ldapConfig;
+          for( let key in fakeresponse.ldapConfig ){
+            newLdapConfig[key] = responseConfig[key];
+          }
           this.$store.commit('UPDATE_LDAP_CONFIG',{ newLdapConfig });
           this.ldapFormPosition++;
           this.possibleAttributes = fakeresponse.objAttributeList;
@@ -346,15 +329,28 @@
       editLDAPObjectAttribute( id ){
         this.editingAttribute = id;
       },
-      confirmLDAPObject(){},
+      confirmLDAPObject(){
+        // some kind of verification happens here and then the server sends the tree?
+        this.ldapFormPosition++;
+      },
+      confirmLDAPSearchStrings(){
+        // some kind of verification happens here and blocks the forward momentum if it fails
+        this.ldapFormPosition++;
+      },
       resetLDAPObject(){},
       updateLDAPAttribute(){},
       cancelEditAttribute(){},
       updateLdapConfig( update ){
         let newLdapConfig = { ...this.currentLdapConfig },
-          { id, value } = update;
-        
-        newLdapConfig[id] = value;
+          { id, value } = update,
+          attrTest = id.split('.');
+
+        if( attrTest.length > 1 ){
+          newLdapConfig[attrTest[0]][attrTest[1]] = value;
+        }
+        else{
+          newLdapConfig[id] = value;
+        }
         this.$store.commit('UPDATE_LDAP_CONFIG',{ newLdapConfig });
       },
       handleFieldChange( evt ){
@@ -393,13 +389,12 @@
         usingPWFile: false,
         ldapHost: '',
         ldapPort: '', 
-        ldapFormPosition: 1,
-        ldapFormLastPos: 0,
+        ldapFormPosition: 0,
         ldapFormState: [
-          'editAttribute',
           'serverSettings',
           'userGroupObjects',
           'userSelection',
+          'miscSettings',
         ],
         editingAttribute: '',
         possibleAttributes: [],

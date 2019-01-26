@@ -83,7 +83,7 @@ export default {
         groupFilterBase: '',
         logging: false,
         webSudoMode: true,
-        webSudoDuration: '5m',
+        webSudoDuration: '300',
         registerOnFirstLogin: false,
       },
     },
