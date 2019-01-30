@@ -5,13 +5,14 @@
         <p> Some helpful text about LDAP settings here.</p>
       </div>
       <!-- Initial LDAP server settings -->
-      <div :class="['ldap-form-group', {visible: ldapSectionToShow === 'serverSettings'}]">
+      <div class="ldap-form-group" v-if="currentSection === 'server'">
         <div class="form-group">
           <label class="form-label" for="ldap-host">Host name</label>
           <input 
             type="text" 
             id="ldap-host" 
-            v-model="ldapHost" 
+            v-model="ldapHost"
+            @change="updateServerAddress" 
           />
         </div>
         <div class="form-group">
@@ -20,13 +21,14 @@
             type="number" 
             id="ldap-port" 
             v-model="ldapPort"
+            @change="updateServerAddress"
           />
         </div>
         <div class="form-group">
           <label class="form-label" for="smtp-connection">Connection security</label>
           <select 
             id="smtp-connection" 
-            @change="updateLDAPConnectionSec"
+            @change="updateConnectionSec"
           >
             <option value="ssl">Use SSL/TLS for all connections</option>
             <option value="startAlways">Use StartTLS for all connections</option>
@@ -38,7 +40,7 @@
           <input 
             type="text" 
             id="ldap-TLSCACertificate" 
-            :value="currentLdapConfig.TLSCACertificate"
+            :value="currentLdapConfig.server.TLSCACertificate"
             @change="handleFieldChange"
           />
         </div>
@@ -46,8 +48,8 @@
           <fancy-checkbox 
             name="anonymousBind"
             label="Login to server anoymnously"
-            :value="currentLdapConfig.anonymousBind"
-            :callback="updateLdapConfig"
+            :value="currentLdapConfig.server.anonymousBind"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </div>
         <div class="form-group" v-if="showBindDN">
@@ -55,7 +57,7 @@
           <input 
             type="text" 
             id="ldap-bindDN" 
-            :value="currentLdapConfig.bindDN"
+            :value="currentLdapConfig.server.bindDN"
             @change="handleFieldChange"
           />
         </div>
@@ -73,7 +75,7 @@
           <input 
             type="password" 
             id="ldap-bindPassword"
-            :value="currentLdapConfig.bindPassword"  
+            :value="currentLdapConfig.server.bindPassword"  
             @input="handleFieldChange" 
           />
         </div>
@@ -87,7 +89,7 @@
           <input 
             type="text" 
             id="ldap-bindPasswordFile" 
-            :value="currentLdapConfig.bindPasswordFile"
+            :value="currentLdapConfig.server.bindPasswordFile"
             @input="handleFieldChange"
           />
         </div>
@@ -95,12 +97,7 @@
       </div>
 
       <!-- Object Attribute confirmation -->
-      <div 
-        :class="[
-          'ldap-form-group', 
-          {visible: ldapSectionToShow === 'userGroupObjects' },
-        ]"
-      >
+      <div class="ldap-form-group" v-if="currentSection === 'ldapObjects'">
         <h2>Here's what we think your LDAP server looks like</h2>
         <table class="ldap-object-attributes">
           <thead>
@@ -108,9 +105,9 @@
           </thead>
           <object-attribute-editor
             attributeName="uniqueIdAttribute"
-            :attributeValue="currentLdapConfig.uniqueIdAttribute"
+            :attributeValue="currentLdapConfig.ldapObjects.uniqueIdAttribute"
             :possibleValues="possibleAttributes"
-            :callback="updateLdapConfig"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </table>
         <table class="ldap-object-attributes">
@@ -119,17 +116,17 @@
           </thead>
           <object-attribute-editor
             attributeName="userObjectClass"
-            :attributeValue="currentLdapConfig.userObjectClass"
+            :attributeValue="currentLdapConfig.ldapObjects.userObjectClass"
             :possibleValues="possibleAttributes"
-            :callback="updateLdapConfig"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
           <object-attribute-editor
-            v-for="(value, key, idx) in currentLdapConfig.userObjectAttributes" 
+            v-for="(value, key, idx) in currentLdapConfig.ldapObjects.userObjectAttributes" 
             :key="idx"
             :attributeName="`userObjectAttributes.${key}`"
             :attributeValue="value"
             :possibleValues="possibleAttributes"
-            :callback="updateLdapConfig"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </table>
         <table class="ldap-object-attributes">
@@ -138,17 +135,17 @@
           </thead>
           <object-attribute-editor
             attributeName="groupObjectClass"
-            :attributeValue="currentLdapConfig.groupObjectClass"
+            :attributeValue="currentLdapConfig.ldapObjects.groupObjectClass"
             :possibleValues="possibleAttributes"
-            :callback="updateLdapConfig"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
           <object-attribute-editor
-            v-for="(value, key, idx) in currentLdapConfig.groupObjectAttributes" 
+            v-for="(value, key, idx) in currentLdapConfig.ldapObjects.groupObjectAttributes" 
             :key="idx"
             :attributeName="`groupObjectAttributes.${key}`"
             :attributeValue="value"
             :possibleValues="possibleAttributes"
-            :callback="updateLdapConfig"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </table>
         <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
@@ -158,41 +155,58 @@
 
       
       <!-- User and Group selection -->
-      <div :class="['ldap-form-group', {visible: ldapSectionToShow === 'userSelection'}]">
-        <treeish-selector 
-              id="ldap-user-group-selector" 
-              class="ldap-tree-selector"
-              :tree="fakeLDAPTree" 
-              :selected-callback="handleUserGroupSelected" 
+      <div class="ldap-form-group" v-if="currentSection === 'searchBase'">
+        <tabbar-selector 
+          :options="searchStringOptions" 
+          :selection="selectedSearchStringSection" 
+          :callback="changeSearchStringSection" 
         />
-        <div class="form-group">
-          <label class="form-label" for="ldap-userSearchBaseDN">User Search Base DN</label>
-          <input 
-            id="ldap-userSearchBaseDN" 
-            type="text" 
-            :value="currentLdapConfig.userSearchBaseDN" 
+        <div class="search-string-section" v-if="selectedSearchStringSection.value === 'users'">
+          <treeish-selector 
+            id="ldap-user-group-selector" 
+            class="ldap-tree-selector"
+            :tree="ldapUserTree"
+            :on-item-clicked="node => (handleTreeClick(node, 'user'))" 
+            :on-item-expand="handleTreeExpand"
           />
+          <div class="form-group">
+            <label class="form-label" for="ldap-userSearchBaseDN">User Search Base DN</label>
+            <input 
+              id="ldap-userSearchBaseDN" 
+              type="text" 
+              :value="currentLdapConfig.searchBase.userSearchBaseDN" 
+            />
+          </div>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="ldap-groupSearchBaseDN">User Search Base DN</label>
-          <input 
-            id="ldap-groupSearchBaseDN" 
-            type="text" 
-            :value="currentLdapConfig.groupSearchBaseDN" 
+        <div class="search-string-section" v-if="selectedSearchStringSection.value === 'groups'">
+          <treeish-selector 
+            id="ldap-user-group-selector" 
+            class="ldap-tree-selector"
+            :tree="ldapGroupTree" 
+            :on-item-clicked="node => (handleTreeClick(node, 'group'))"
+            :on-item-expand="handleTreeExpand"    
           />
+          <div class="form-group">
+            <label class="form-label" for="ldap-groupSearchBaseDN">Group Search Base DN</label>
+            <input 
+              id="ldap-groupSearchBaseDN" 
+              type="text" 
+              :value="currentLdapConfig.searchBase.groupSearchBaseDN" 
+            />
+          </div>
         </div>
         <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
         <button class="primary-button" @click="confirmLDAPSearchStrings">Confirm</button>
       </div>
 
       <!-- Misc Settings == I'm not sure if these have a better spot somewhere else -->
-      <div :class="['ldap-form-group', {visible: ldapSectionToShow === 'miscSettings'}]">
+      <div class="ldap-form-group" v-if="currentSection === 'misc'">
         <div class="form-group">
           <fancy-checkbox 
             name="webSudoMode"
             label="Use WebSudo Mode"
-            :value="currentLdapConfig.webSudoMode"
-            :callback="updateLdapConfig"
+            :value="currentLdapConfig.misc.webSudoMode"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </div>
         <div class="form-group">
@@ -200,50 +214,118 @@
           <input 
             id="ldap-webSudoDuration" 
             type="number" 
-            :value="currentLdapConfig.webSudoDuration" 
+            :value="currentLdapConfig.misc.webSudoDuration" 
           />
         </div>
         <div class="form-group">
           <fancy-checkbox 
             name="registerOnFirstLogin"
             label="Allow users to Register on First Login"
-            :value="currentLdapConfig.registerOnFirstLogin"
-            :callback="updateLdapConfig"
+            :value="currentLdapConfig.misc.registerOnFirstLogin"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </div>
         <div class="form-group">
           <fancy-checkbox 
             name="logging"
             label="Enable logging"
-            :value="currentLdapConfig.logging"
-            :callback="updateLdapConfig"
+            :value="currentLdapConfig.misc.logging"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </div>
         <div class="form-group">
           <fancy-checkbox 
             name="serverTLSInsecure"
             label="Accept any certificate presented by the server and any host name in that certificate. Enabling this setting will make your server susceptible to man-in-the-middle attacks but is required in some circumstances, such as when using a self-signed certificate."
-            :value="currentLdapConfig.serverTLSInsecure"
-            :callback="updateLdapConfig"
+            :value="currentLdapConfig.misc.serverTLSInsecure"
+            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </div>
+         <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
+        <button class="primary-button" @click="finalVerifyLdapConfig">
+          Confirm
+        </button>
+      </div>
+      <div class="ldap-form-group" v-if="currentSection === 'summary'">
+        
+        <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
+          <table class="summary-table">
+            <thead>
+              
+            </thead>
+          </table>
       </div>
   </div>
 </template>
 <script>
-  import { TreeishSelector, FancyCheckbox } from 'rsconnect_storybook';
+  import { TreeishSelector, FancyCheckbox, TabbarSelector } from 'rsconnect_storybook';
   import ObjectAttributeEditor from '../components/ObjectAttributeEditor';
   import { mapState } from 'vuex';
+  // this is just for prototyping purposed
+  import { 
+    FAKE_LDAP_USER_RESPONSE, 
+    FAKE_LDAP_GROUP_RESPONSE,
+    FAKE_LDAP_OBJECTS_DETAILS,
+    FAKE_LDAP_ATTRS_LIST,
+  } from '../components/fakeResponses';
 
   export default {
     name: 'ldap-config',
     components: {
       TreeishSelector,
       FancyCheckbox,
+      TabbarSelector,
       ObjectAttributeEditor,
     },
     props: {},
+    data(){
+      return {
+        usingPWFile: false,
+        ldapHost: '',
+        ldapPort: '', 
+        ldapFormPosition: 0,
+        ldapFormState: [
+          'server',
+          'ldapObjects',
+          'searchBase',
+          'misc',
+          'summary',
+        ],
+        editingAttribute: '',
+        possibleAttributes: [],
+        currentLDAPSelected: '',
+        correctedAttribute: '',
+        selectedLDAPObject: {},
+        pendingLDAPObjectAttribs: {},
+        ldapUserTree: {},
+        ldapGroupTree: {},
+        searchStringOptions: [
+          { label: 'Users', value: 'users' }, 
+          { label: 'Groups', value: 'groups' }
+        ],
+        selectedSearchStringSection: { label: 'Users', value: 'users' },
+      };
+    },
     methods: {
+      finalVerifyLdapConfig(){
+        // not sure that any verification is needed here other than the user to confirm choices or
+        // go back and change something. Everything should be machine checked along the way
+        this.ldapFormPosition++;
+        this.clearNext();
+      },
+      handleTreeExpand( node ){
+        node.state.expanded = !node.state.expanded;
+      },
+      handleTreeClick( node, type ){
+        let alreadySelected = node.state.selected,
+          treeInUse = type === 'user' ? this.ldapUserTree : this.ldapGroupTree;
+        this.forEachNode(treeInUse, node => (node.state.selected = false));
+        node.state.selected = alreadySelected == null ? true : !alreadySelected;
+        this.updateLdapConfig( {id: `${type}SearchBaseDN`, value: node.dn }, this.currentSection );
+      },
+      changeSearchStringSection( update ){
+        this.selectedSearchStringSection = update;
+      },
       clearNext(){
         this.$store.commit('UPDATE_OB_CAN_GO_NEXT', { newCanGoNext: true });
       },
@@ -255,63 +337,20 @@
         // the objects and attributes for the next step goes here.
         // The assunption is that the server will always return every required field, and if we 
         // can't derive the value we just send back '???' which we can display to the user
-        let fakeresponse = {
-          ldapConfig: {
-            userObjectClass: 'posixAccount',
-            userObjectAttributes: {
-              usernameAttribute: 'uid',
-              userEmailAttribute: '???',
-              userFirstNameAttribute: 'givenName',
-              userLastNameAttribute: '???',
-            },
-            groupObjectClass: 'posixGroup',
-            groupObjectAttributes: {
-                groupNameAttribute: '???',
-                groupUniqueIdAttribute: '???',
-            },
-            uniqueIdAttribute: 'DN',
-          },
+        let response = {
+          ldapConfig: FAKE_LDAP_OBJECTS_DETAILS,
           // no idea if this is too simple or not
-          objAttributeList: [
-            'DN',
-            'posixAccount',
-            'top',
-            'cn',
-            'guId',
-            'memberNumber',
-            'firstName',
-            'memberGuId',
-          ],
-
+          objAttributeList: FAKE_LDAP_ATTRS_LIST,
         };
         
-        if( !fakeresponse.error ){
-          let newLdapConfig = { ...this.currentLdapConfig };
-          // newLdapConfig = { ...fakeresponse.ldapConfig };
-          let responseConfig = fakeresponse.ldapConfig;
-          for( let key in fakeresponse.ldapConfig ){
-            newLdapConfig[key] = responseConfig[key];
-          }
-          this.$store.commit('UPDATE_LDAP_CONFIG',{ newLdapConfig });
+        if( !response.error ){
+          let newLdapConfig = response.ldapConfig;
           this.ldapFormPosition++;
-          this.possibleAttributes = fakeresponse.objAttributeList;
+          this.$store.commit('UPDATE_LDAP_CONFIG',{ newLdapConfig, section: this.currentSection} );
+          this.possibleAttributes = response.objAttributeList;
         }
       },
-      updateLDAPConnectionSec( evt ){
-        switch( evt.target.value ){
-          case 'ssl':
-            this.updateLdapConfig( { id: 'tls', value: true });
-            this.updateLdapConfig( { id: 'startTLS', value: false });
-            break;
-          case 'startAlways':
-            this.updateLdapConfig( { id: 'tls', value: false });
-            this.updateLdapConfig( { id: 'startTLS', value: true });
-            break;
-          default: 
-            this.updateLdapConfig( { id: 'tls', value: false });
-            this.updateLdapConfig( { id: 'startTLS', value: false });
-        }
-      },
+      
       swapPWField(){
         // clear the password data just to make sure we don't leak anything
         this.updateLdapConfig( { id: 'bindPassword', value: '' });
@@ -324,43 +363,83 @@
         this.updateLdapConfig({ id, value });
         this.editingAttribute = '';
       },
-      handleUserGroupSelected(){},
-      selectLDAPObject(){},
+      handleUserGroupSelected( val ){
+        console.debug(val);
+      },
       editLDAPObjectAttribute( id ){
         this.editingAttribute = id;
       },
       confirmLDAPObject(){
         // some kind of verification happens here and then the server sends the tree?
         this.ldapFormPosition++;
+        let fakeresponse = {
+          userTree : FAKE_LDAP_USER_RESPONSE,
+          groupTree: FAKE_LDAP_GROUP_RESPONSE,  
+        };
+
+        if( !fakeresponse.error ){
+          this.ldapUserTree = fakeresponse.userTree;
+          this.ldapGroupTree = fakeresponse.groupTree;
+        }
       },
       confirmLDAPSearchStrings(){
         // some kind of verification happens here and blocks the forward momentum if it fails
         this.ldapFormPosition++;
       },
-      resetLDAPObject(){},
-      updateLDAPAttribute(){},
-      cancelEditAttribute(){},
-      updateLdapConfig( update ){
-        let newLdapConfig = { ...this.currentLdapConfig },
+      updateLdapConfig( update, section ){
+        let newLdapConfig = { ...this.currentLdapConfig[section] },
           { id, value } = update,
           attrTest = id.split('.');
 
-        if( attrTest.length > 1 ){
-          newLdapConfig[attrTest[0]][attrTest[1]] = value;
+        if( attrTest.length > 2 ){
+          newLdapConfig[attrTest[1]][attrTest[2]] = value;
         }
         else{
           newLdapConfig[id] = value;
         }
-        this.$store.commit('UPDATE_LDAP_CONFIG',{ newLdapConfig });
+        this.$store.commit('UPDATE_LDAP_CONFIG',{ newLdapConfig, section });
       },
       handleFieldChange( evt ){
         let id = evt.target.id.split('-')[1],
           value = evt.target.value;
-        this.updateLdapConfig({ id, value });
+        this.updateLdapConfig( { id, value }, this.currentSection );
+      },
+      forEachNode(nodesArray, cb) {
+        if (nodesArray == null) {
+          return;
+        }
+
+        for (let node of nodesArray) {
+          cb(node);
+          this.forEachNode(node.children, cb);
+        }
+      },
+      updateServerAddress(){
+        this.updateLdapConfig( 
+          { id: 'serverAddress', value: this.serverAddress }, this.currentSection
+        );
+      },
+      updateConnectionSec( evt ){
+        switch( evt.target.value ){
+          case 'ssl':
+            this.updateLdapConfig( { id: 'tls', value: true }, this.currentSection );
+            this.updateLdapConfig( { id: 'startTLS', value: false }, this.currentSection );
+            break;
+          case 'startAlways':
+            this.updateLdapConfig( { id: 'tls', value: false }, this.currentSection );
+            this.updateLdapConfig( { id: 'startTLS', value: true }, this.currentSection );
+            break;
+          default: 
+            this.updateLdapConfig( { id: 'tls', value: false });
+            this.updateLdapConfig( { id: 'startTLS', value: false }, this.currentSection );
+        }
+      },
+      resetLDAPObject(){
+        
       },
     },
     computed: {
-      ldapServerAddress(){
+      serverAddress(){
         return `${this.ldapHost}:${this.ldapPort}`;
       },
       showBindDN(){
@@ -372,7 +451,7 @@
         }
         return false;
       },
-      ldapSectionToShow(){
+      currentSection(){
         return this.ldapFormState[this.ldapFormPosition];
       },
       ...mapState({
@@ -384,233 +463,11 @@
         this.updateLdapConfig({ id: 'serverAddress', value: this.ldapServerAddress });
       },
     },
-    data(){
-      return {
-        usingPWFile: false,
-        ldapHost: '',
-        ldapPort: '', 
-        ldapFormPosition: 0,
-        ldapFormState: [
-          'serverSettings',
-          'userGroupObjects',
-          'userSelection',
-          'miscSettings',
-        ],
-        editingAttribute: '',
-        possibleAttributes: [],
-        currentLDAPSelected: '',
-        correctedAttribute: '',
-        selectedLDAPObject: {},
-        pendingLDAPObjectAttribs: {},
-        fakeLDAPTree: {
-          root: true,
-          id: '001',
-          label: 'Some Server(dc=some,dc=server)',
-          state: {
-            selected: false,
-            expanded: true,
-          },
-          metadata: [
-            { attribute: 'objectclass', value: 'dcObject (auxilliary)' },
-            { attribute: 'objectclass', value: 'organization (structural)' },
-            { attribute: 'objectclass', value: 'top (abstract)' },
-            { attribute: 'dc', value: 'some' },
-            { attribute: 'o', value: 'some server' },
-          ],
-          children: [
-            {
-              id: '002',
-              label: 'Groups (ou=groups)',
-              state: {
-                selected: false,
-                expanded: false,
-              },
-              metadata: [
-                { attribute: 'objectclass', value: 'organizationalUnit (structural)' },
-                { attribute: 'objectclass', value: 'top (abstract)' },
-                { attribute: 'ou', value: 'groups' },
-              ],
-              children: [
-                {
-                  id: '003',
-                  label: 'Admins (cn=admins)',
-                  state: {
-                    selected: false,
-                    expanded: false,
-                  },
-                  metadata: [
-                    { attribute: 'objectclass', value: 'posixGroup (structural)' },
-                    { attribute: 'objectclass', value: 'top (abstract)' },
-                    { attribute: 'cn', value: 'admins' },
-                    { attribute: 'gidNumber', value: '500' },
-                    { attribute: 'memberUid', value: 'bRoss' },
-                  ],
-                  children: [],
-                },
-                {
-                  id: '004',
-                  label: 'Datascience (cn=datascience)',
-                  state: {
-                    selected: false,
-                    expanded: false,
-                  },
-                  metadata: [
-                    { attribute: 'objectclass', value: 'posixGroup (structural)' },
-                    { attribute: 'objectclass', value: 'top (abstract)' },
-                    { attribute: 'cn', value: 'datascience' },
-                    { attribute: 'gidNumber', value: '501' },
-                    { attribute: 'memberUid', value: 'rBoss' },
-                    { attribute: 'memberUid', value: 'bSors' }
-                  ],
-                  children: [],
-                }, 
-                {
-                  id: '005',
-                  label: 'Supersecret (cn=supersecret)',
-                  state: {
-                    selected: false,
-                    expanded: false,
-                  },
-                  metadata: [
-                    { attribute: 'objectclass', value: 'posixGroup (structural)' },
-                    { attribute: 'objectclass', value: 'top (abstract)' },
-                    { attribute: 'cn', value: 'supersecret' },
-                    { attribute: 'gidNumber', value: '502' },
-                    { attribute: 'memberUid', value: 'sBors' },
-                    { attribute: 'memberUid', value: 'bRoss' },
-                    { attribute: 'memberUid', value: 'bSors' },
-                  ],
-                  children: [],
-                }, 
-              ],
-            },
-            {
-              id: '003',
-              label: 'Users (ou=users)',
-              state: {
-                selected: false,
-                expanded: false,
-              },
-              metadata: [
-                { attribute: 'objectclass', value: 'organizationalUnit (structural)' },
-                { attribute: 'objectclass', value: 'top (abstract)' },
-                { attribute: 'ou', value: 'users' },
-              ],
-              children: [
-                {
-                  id: '006',
-                  label: 'Bob Ross (cn=Bob Ross)',
-                  state: {
-                    selected: false,
-                    expanded: false,
-                  },
-                  metadata: [
-                    { attribute: 'objectclass', value: 'inetOrgPerson (structural)' },
-                    { attribute: 'objectclass', value: 'posixAccount (auxillary)' },
-                    { attribute: 'objectclass', value: 'top (abstract)' },
-                    { attribute: 'cn', value: 'Bob Ross' },
-                    { attribute: 'gidNumber', value: '502' },
-                    { attribute: 'homeDirectory', value: '/home/users/bRoss' },
-                    { attribute: 'sn', value: 'Ross' },
-                    { attribute: 'uid', value: 'bRoss' },
-                    { attribute: 'uidNumber', value: '1001' },
-                    { attribute: 'givenName', value: 'Bob' },
-                    { attribute: 'loginShell', value: '/bin/sh' },
-                    { attribute: 'userPassword', value: 'MD5 hashed password' },
-                    { attribute: 'mail', value: 'bRoss@some.server' },
-                  ],
-                  children: [],
-                },
-                {
-                  id: '007',
-                  label: 'Rob Boss (cn=Rob Boss)',
-                  state: {
-                    selected: false,
-                    expanded: false,
-                  },
-                  metadata: [
-                    { attribute: 'objectclass', value: 'inetOrgPerson (structural)' },
-                    { attribute: 'objectclass', value: 'posixAccount (auxillary)' },
-                    { attribute: 'objectclass', value: 'top (abstract)' },
-                    { attribute: 'cn', value: 'Rob Boss' },
-                    { attribute: 'gidNumber', value: '502' },
-                    { attribute: 'homeDirectory', value: '/home/users/rBoss' },
-                    { attribute: 'sn', value: 'Boss' },
-                    { attribute: 'uid', value: 'rBoss' },
-                    { attribute: 'uidNumber', value: '1002' },
-                    { attribute: 'givenName', value: 'Rob' },
-                    { attribute: 'loginShell', value: '/bin/sh' },
-                    { attribute: 'userPassword', value: 'MD5 hashed password' },
-                    { attribute: 'mail', value: 'rBoss@some.server' },
-                  ],
-                  children: [],
-                },
-                {
-                  id: '008',
-                  label: 'Sob Bors (cn=Sob Bors)',
-                  state: {
-                    selected: false,
-                    expanded: false,
-                  },
-                  metadata: [
-                    { attribute: 'objectclass', value: 'inetOrgPerson (structural)' },
-                    { attribute: 'objectclass', value: 'posixAccount (auxillary)' },
-                    { attribute: 'objectclass', value: 'top (abstract)' },
-                    { attribute: 'cn', value: 'Sob Bors' },
-                    { attribute: 'gidNumber', value: '502' },
-                    { attribute: 'homeDirectory', value: '/home/users/sBors' },
-                    { attribute: 'sn', value: 'Bors' },
-                    { attribute: 'uid', value: 'sBors' },
-                    { attribute: 'uidNumber', value: '1003' },
-                    { attribute: 'givenName', value: 'Sob' },
-                    { attribute: 'loginShell', value: '/bin/sh' },
-                    { attribute: 'userPassword', value: 'MD5 hashed password' },
-                    { attribute: 'mail', value: 'sBors@some.server' },
-                  ],
-                  children: [],
-                },
-                {
-                  id: '009',
-                  label: 'Bob Sors (cn=Bob Sors)',
-                  state: {
-                    selected: false,
-                    expanded: false,
-                  },
-                  metadata: [
-                    { attribute: 'objectclass', value: 'inetOrgPerson (structural)' },
-                    { attribute: 'objectclass', value: 'posixAccount (auxillary)' },
-                    { attribute: 'objectclass', value: 'top (abstract)' },
-                    { attribute: 'cn', value: 'Bob Sors' },
-                    { attribute: 'gidNumber', value: '502' },
-                    { attribute: 'homeDirectory', value: '/home/users/bSors' },
-                    { attribute: 'sn', value: 'Sors' },
-                    { attribute: 'uid', value: 'bSors' },
-                    { attribute: 'uidNumber', value: '1003' },
-                    { attribute: 'givenName', value: 'Bob' },
-                    { attribute: 'loginShell', value: '/bin/sh' },
-                    { attribute: 'userPassword', value: 'MD5 hashed password' },
-                    { attribute: 'mail', value: 'bSors@some.server' },
-                  ],
-                  children: [],
-                },
-              ],
-            },
-          ],
-      },
-        
-      };
-    },
     created(){
       this.blockNext();
     },
   };
 </script>
 <style lang="scss">
-  .ldap-form-group {
-    display: none;
-
-    &.visible {
-      display: block;
-    }
-  }
+ 
 </style>

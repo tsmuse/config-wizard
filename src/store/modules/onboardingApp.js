@@ -23,7 +23,7 @@ export const mutations = {
     state.config.http = payload.newHttpConfig;
   },
   [types.UPDATE_LDAP_CONFIG](state, payload) {
-    state.config.ldap = payload.newLdapConfig;
+    state.config.ldap[payload.section] = payload.newLdapConfig;
   },
 };
 
@@ -54,37 +54,45 @@ export default {
         provider: 'password',
       },
       ldap: {
-        serverAddress: '',
-        tls: true,
-        startTLS: false,
-        TLSCACertificate: '',
-        serverTLSInsecure: false,
-        bindDN: '',
-        bindPassword: '',
-        bindPasswordFile: '',
-        anonymousBind: false,
-        userObjectAttributes: {
-          userFirstNameAttribute: '',
-          userLastNameAttribute: '',
-          userEmailAttribute: '',
-          usernameAttribute: '',
+        server: {
+          serverAddress: '',
+          tls: true,
+          startTLS: false,
+          TLSCACertificate: '',
+          serverTLSInsecure: false,
+          bindDN: '',
+          bindPassword: '',
+          bindPasswordFile: '',
+          anonymousBind: false,
         },
-        groupObjectAttributes: {
-          groupNameAttribute: '',
-          groupUniqueIdAttribute: 'DN',
+        ldapObjects: {
+          userObjectAttributes: {
+            userFirstNameAttribute: '',
+            userLastNameAttribute: '',
+            userEmailAttribute: '',
+            usernameAttribute: '',
+          },
+          groupObjectAttributes: {
+            groupNameAttribute: '',
+            groupUniqueIdAttribute: 'DN',
+          },
+          userObjectClass: '',
+          userFilterBase: 'objectClass={UserObjectClass}',
+          groupObjectClass: '',
+          groupFilterBase: 'objectClass={GroupObjectClass}',
+          uniqueIdAttribute: 'DN',
         },
-        userObjectClass: '',
-        userFilterBase: '',
-        uniqueIdAttribute: 'DN',
-        userSearchBaseDN: '',
-        permittedLoginGroup: '',
-        groupObjectClass: '',
-        groupSearchBaseDN: '',
-        groupFilterBase: '',
-        logging: false,
-        webSudoMode: true,
-        webSudoDuration: '300',
-        registerOnFirstLogin: false,
+        searchBase: {
+          userSearchBaseDN: '',
+          groupSearchBaseDN: '',
+        },
+        misc: {
+          permittedLoginGroup: '',
+          logging: false,
+          webSudoMode: true,
+          webSudoDuration: '300',
+          registerOnFirstLogin: false,
+        }
       },
     },
     configPath: {
