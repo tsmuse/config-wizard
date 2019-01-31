@@ -1,41 +1,27 @@
 <template>
-  <div class="welcome-container">
-    <h1>Welcome to RStudio Connect</h1>
-    <p>We will quickly guide you through the setup process to get RStudio Connect up and running, 
-      including letting your know what information you need to have on-hand to complete the setup. 
-      More copy that introduces the product could go here.
-    </p>
-
-    <h2>Basic Information</h2>
-    <div class="form-group">
-      <label class="form-label" for="serverAddress">Server Address</label>
-      <input type="text" id="serverAddress" :value="serverAddress" @change="updateServerAddress"/>
-      <p class="explainer-text">This is the URL your RStudio Conncect server will use</p>
-    </div>
-    <div class="form-group">
-      <label class="form-label" for="senderEmail">Sender Email</label>
-      <input type="email" id="senderEmail" :value="senderEmail" @change="updateSenderEmail" />
-      <p class="explainer-text">
-        This is the email address your RStudio Conncect server will use to send emails
+  <div>
+    <div class="form-container welcome-container">
+      <h1 class="form-title">Welcome to RStudio Connect</h1>
+      <p class="welcome-text">We will quickly guide you through the setup process to get RStudio Connect up and running, 
+        including letting your know what information you need to have on-hand to complete the setup. 
+        More copy that introduces the product could go here.
       </p>
+
+      <h2>Basic Information</h2>
+      <div class="form-group">
+        <label class="form-label" for="serverAddress">Server Address</label>
+        <input type="text" id="serverAddress" :value="serverAddress" @change="updateServerAddress"/>
+        <p class="explainer-text">This is the URL your RStudio Conncect server will use</p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="senderEmail">Sender Email</label>
+        <input type="email" id="senderEmail" :value="senderEmail" @change="updateSenderEmail" />
+        <p class="explainer-text">
+          This is the email address your RStudio Conncect server will use to send emails
+        </p>
+      </div>
     </div>
     <https-config />
-    <!-- <h2>Send email via</h2>
-    <radio-button-group 
-      label="Select an email service for Connect to use"
-      :options="pathOptions.emailOptions"
-      :value="configPathEmail"
-      :callback="updateConfigPath"
-      group-name="email"
-    />    
-    <h2>Authenticate users via</h2>
-    <radio-button-group
-      label="Select a method to authentica the users of your Connect server"
-      :options="pathOptions.authOptions"
-      :value="configPathAuth"
-      :callback="updateConfigPath"
-      group-name="auth"
-    /> -->
   </div>
 </template>
 <script>
@@ -79,4 +65,9 @@
   };
 </script>
 <style lang="scss">
+  .welcome-text {
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  
 </style>

@@ -1,8 +1,8 @@
 <template>
   <div class="ldap-container">
     <div class="ldap-header">
-        <h1>LDAP Configuration</h1>
-        <p> Some helpful text about LDAP settings here.</p>
+        <h1 class="form-title">LDAP Configuration</h1>
+        <!-- <p> Some helpful text about LDAP settings here.</p> -->
       </div>
       <!-- Initial LDAP server settings -->
       <div class="ldap-form-group" v-if="currentSection === 'server'">
@@ -126,7 +126,7 @@
             :attributeName="`userObjectAttributes.${key}`"
             :attributeValue="value"
             :possibleValues="possibleAttributes"
-            :callback="update => (this.updateLdapConfig(update, this.currentSection))"
+            :callback="update => (updateLdapConfig(update, currentSection))"
           />
         </table>
         <table class="ldap-object-attributes">
@@ -148,7 +148,7 @@
             :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </table>
-        <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
+        <button class="secondary-button" @click="goBack">Back</button>
         <button class="primary-button" @click="confirmLDAPObject">Confirm</button>
         
       </div>
@@ -195,7 +195,7 @@
             />
           </div>
         </div>
-        <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
+        <button class="secondary-button" @click="goBack">Back</button>
         <button class="primary-button" @click="confirmLDAPSearchStrings">Confirm</button>
       </div>
 
@@ -241,19 +241,87 @@
             :callback="update => (this.updateLdapConfig(update, this.currentSection))"
           />
         </div>
-         <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
+         <button class="secondary-button" @click="goBack">Back</button>
         <button class="primary-button" @click="finalVerifyLdapConfig">
           Confirm
         </button>
       </div>
       <div class="ldap-form-group" v-if="currentSection === 'summary'">
-        
-        <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
+        <table class="summary-table">
+          <thead>
+            <th>Server settings</th>
+          </thead>
+          <tbody>
+            <tr v-for="(value, key, idx) in this.currentLdapConfig.server" :key="idx">
+              <td class="summary-table-item">{{key}}</td>
+              <td class="summary-table-item">{{value}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="summary-table-group">
           <table class="summary-table">
             <thead>
-              
+              <th>LDAP objects and Attributes</th>
             </thead>
+            <tbody>
+              <tr v-for="(value, key, idx) in this.currentLdapConfig.ldapObjects" :key="idx">
+                <td v-if="typeof value !== 'object'" class="summary-table-item">{{key}}</td>
+                <td v-if="typeof value !== 'object'" class="summary-table-item">{{value}}</td>
+              </tr>
+            </tbody>
           </table>
+          <table class="summary-table sub-table">
+            <thead>
+              <th>User Object Attributes</th>
+            </thead>
+            <tbody>
+              <tr 
+                v-for="(value, key, idx) in this.currentLdapConfig.ldapObjects.userObjectAttributes"
+                :key="idx"
+              >
+                <td class="summary-table-item">{{key}}</td>
+                <td class="summary-table-item">{{value}}</td>
+              </tr>
+            </tbody>
+          </table>
+          <table class="summary-table sub-table">
+            <thead>
+              <th>Group Object Attributes</th>
+            </thead>
+            <tbody>
+              <tr 
+                v-for="(value, key, idx) in this.currentLdapConfig.ldapObjects.groupObjectAttributes"
+                :key="idx"
+              >
+                <td class="summary-table-item">{{key}}</td>
+                <td class="summary-table-item">{{value}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <table class="summary-table">
+          <thead>
+            <th>Search Strings</th>
+          </thead>
+          <tbody>
+            <tr v-for="(value, key, idx) in this.currentLdapConfig.searchBase" :key="idx">
+              <td class="summary-table-item">{{key}}</td>
+              <td class="summary-table-item">{{value}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <table class="summary-table">
+          <thead>
+            <th>Other options</th>
+          </thead>
+          <tbody>
+            <tr v-for="(value, key, idx) in this.currentLdapConfig.misc" :key="idx">
+              <td class="summary-table-item">{{key}}</td>
+              <td class="summary-table-item">{{value}}</td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="secondary-button" @click="resetLDAPObject">Cancel</button>
       </div>
   </div>
 </template>
@@ -353,8 +421,8 @@
       
       swapPWField(){
         // clear the password data just to make sure we don't leak anything
-        this.updateLdapConfig( { id: 'bindPassword', value: '' });
-        this.updateLdapConfig( { id: 'bindPasswordFile', value: '' });
+        this.updateLdapConfig( { id: 'bindPassword', value: '' }, this.currentSection );
+        this.updateLdapConfig( { id: 'bindPasswordFile', value: '' }, this.currentSection );
         this.usingPWFile = !this.usingPWFile; 
       },
       updateAttribute( evt ){
@@ -391,8 +459,8 @@
           { id, value } = update,
           attrTest = id.split('.');
 
-        if( attrTest.length > 2 ){
-          newLdapConfig[attrTest[1]][attrTest[2]] = value;
+        if( attrTest.length > 1 ){
+          newLdapConfig[attrTest[0]][attrTest[1]] = value;
         }
         else{
           newLdapConfig[id] = value;
@@ -434,8 +502,8 @@
             this.updateLdapConfig( { id: 'startTLS', value: false }, this.currentSection );
         }
       },
-      resetLDAPObject(){
-        
+      goBack(){
+        this.ldapFormPosition--;
       },
     },
     computed: {
@@ -443,7 +511,7 @@
         return `${this.ldapHost}:${this.ldapPort}`;
       },
       showBindDN(){
-        return !this.currentLdapConfig.anonymousBind;
+        return !this.currentLdapConfig.server.anonymousBind;
       },
       showBindPW(){
         if( this.showBindDN && !this.usingPWFile ){

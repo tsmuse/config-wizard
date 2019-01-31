@@ -1,7 +1,7 @@
 <template>
-  <div class="smtp-container">
-    <h1>SMTP Configuration</h1>
-      <p> Some helpful text about SMTP settings here.</p>
+  <div class="form-container smtp-container">
+    <h1 class="form-title">SMTP Configuration</h1>
+      <!-- <p> Some helpful text about SMTP settings here.</p> -->
       <div class="form-group">
         <label class="form-label" for="smtp-connection">Connection security</label>
         <select 

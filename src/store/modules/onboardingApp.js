@@ -100,6 +100,79 @@ export default {
       auth: '',
     },
     canGoNext: false,
+    progressInfo: [
+      {
+        section: 'Basics',
+        complete: false,
+      },
+      {
+        section: 'Email',
+        complete: false,
+      },
+      {
+        section: 'Authentication',
+        complete: false,
+      },
+    ],
+    allHelp:{
+      basics: {
+        basics: [
+          {
+            title: 'Web Server',
+            help: `RStudio Connect will serve a variety of web pages, including this configuration tool. We recommend you serve all these pages over HTTPS. To setup HTTPS provide the port you would like to serve on (the default is 443), the path to your TLS certificate, and your private SSH key. If you're RStudio Connect Server will be behind other infrastructure that will be serving https, simply select https provided by an external source and provide the port. While it is possible to server RStudio Connect via http, We do not recommend it.`,
+          },
+        ],
+      },
+      email: {
+        path: [
+          {
+            help: `RStudio Connect can send you and your team updates and notifications via email. If you have sendmmail setup on this server there is nothing more to setup! If you use SMTP, you'll need to provide the address and port of the SMTP server, the type of connection security, and a user name and password (if you're server requires them, not all do.)`,
+          },
+        ],
+        smtp: [
+          {
+            help: `Some helpful summary about SMTP settings`
+          },
+          {
+            title: 'Connection Security',
+            help: `This is the encyption method used when communicating with your SMTP server...`,
+          },
+          {
+            title: 'Username & Password',
+            help: `Your server may not require a user name and password to connect. If it doesn't simply leave these fields blank.`,
+          },
+        ],
+      },
+      auth: {
+        path: [
+          {
+            help: `You can use multiple ways to authenticate users in RStudio Connect. If you want to simple use passwords managed by Connect, there is nothing more to setup! Other authentication types require knowing the specifics of your existing authentication service.`,
+          },
+          {
+            title: 'OAuth2',
+            help: `Currently OAuth2 isn't part of this prototype. Selecting it as an option will skip the auth section`
+          },
+          {
+            title: 'LDAP/Active Directory',
+            help: `Our multi-part form will help you configure RStudio Connect to use your LDAP server for authentication. You will need to know your server's hostname anb port and will have to have a user or bindDN and password with permissions to start this process.`,
+          },
+        ],
+        oauth: [],
+        ldap: [
+          {
+            help: `Some helpful ldap summary`,
+          },
+          {
+            title: 'Connection Security',
+            help: `We reccomend that you use SSL or StartTLS for all your connections.`,
+          },
+          {
+            title: 'Server connection',
+            help: `It's important to make sure you have a BindDN/username with the appropriate permissions for your ldap server.`,
+          },
+        ],
+      },
+    },
     
   },
   getters: {},

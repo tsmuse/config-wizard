@@ -2,17 +2,26 @@
   <div id="app">
     <div class="onboarding">
       <!-- router-view changes the form that is displayed only -->
-      <router-view/>
+      <div class="main-container">
+        <router-view/>
+      </div>
+      <div class="help-container">
+        <what-you-need-to-know :currentSectionHelp="currentHelp" :progressInfo="progressInfo" />
+      </div>
+      <div class="controls-container">
       <!-- <button class="primary-button" @click="updatePage" :disabled="nextBtnDisabled">Next: {{nextSectionLabel}} </button> -->
-      <button class="primary-button" @click="moveToNext" :disabled="!canGoNext">Next: {{nextSectionLabel}} </button>
-
+        <button class="primary-button" @click="moveToNext" :disabled="!canGoNext">Next: {{nextSectionLabel}} </button>
+      </div>
     </div>
   </div>
 </template>
 <script>
   import { mapState } from 'vuex';
-
+  import WhatYouNeedToKnow from './components/WhatYouNeedToKnow';
   export default {
+    components: {
+      WhatYouNeedToKnow,
+    },
     computed: {
       nextSectionLabel() {
         return 'this is a test label';
@@ -45,9 +54,31 @@
       currentRoute(){
         return this.$route.path;
       },
+      currentHelp(){
+        let helpArr = [];
+        switch(this.currentRoute){
+          case '/':
+            helpArr = this.allHelp.basics.basics;
+            break;
+          case '/email':
+            helpArr = this.allHelp.email.path;
+            break;
+          case '/email/smtp':
+            helpArr = this.allHelp.email.smtp;
+            break;
+          case '/auth':
+            helpArr = this.allHelp.auth.path;
+            break;
+          case '/auth/ldap':
+            helpArr = this.allHelp.auth.ldap;
+        }
+        return helpArr;
+      },
       ...mapState({
         canGoNext: state => state.onboarding.canGoNext,
         configPath: state => state.onboarding.configPath,
+        progressInfo: state => state.onboarding.progressInfo,
+        allHelp: state => state.onboarding.allHelp,
       })
     },
     methods: {
@@ -66,21 +97,52 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color: #2c3e50;
-    background: darkgray;
+    background: linear-gradient(-45deg, #585858, #a0a0a0 90%);
     height: 100%;
     min-height:100vh;
   }
   .onboarding {
     min-height:100vh;
     height:100%;
-    max-width: 900px;
+    max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 50px;
-    padding-right: 50px;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    // padding-left: 50px;
+    // padding-right: 50px;
+    // padding-top: 1rem;
+    // padding-bottom: 1rem;
     background: white;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto 75px;
+
+    .main-container {
+      grid-column: 1 / 2;
+      grid-row: 1 / 2;
+      padding-right: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    .help-container {
+      grid-column: 2 / 3;
+      grid-row: 1 / 3;
+      padding-left: 0.25rem;
+      padding-right: 1.5rem;
+      
+    }
+
+    .controls-container {
+      grid-column: 1 / 2;
+      grid-row: 2 / 3;
+      padding-right: 1.5rem;
+      padding-left: 1.5rem;
+    }
+
+    .main-container,
+    .help-container {
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
   }
   .explainer-text {
     font-style: italic;
@@ -89,13 +151,17 @@
     margin-top: 0.25rem;
     margin-bottom: 0;
   }
-  .ldap-form-group.visible {
-  }
   .form-group {
+    flex: 0 0 auto;
     margin-bottom: 0.5rem;
     .form-label {
       display:block;
     }
+  }
+
+  .form-title {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
   }
 
   .connection-summary-bar {

@@ -1,7 +1,7 @@
 <template>
-  <div class="http-container">
+  <div class="form-container http-container">
     <h2>Web Server</h2>
-    <p>
+    <!-- <p>
       RStudio Connect will serve a variety of web pages, including this configuration tool. We 
       recommend you serve all these pages over HTTPS. To setup HTTPS provide the port you would like
       to serve on (the default is 443), the path to your TLS certificate, and your private SSH key.
@@ -10,7 +10,7 @@
     </p>
     <p>
       <em>While it is possible to server RStudio Connect via http, <strong>We do not recommend it.</strong></em>
-    </p>
+    </p> -->
     
     <div class="form-group">
       <label class="form-label" for="http-port">Port</label>

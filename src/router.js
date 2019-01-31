@@ -45,7 +45,7 @@ export default new Router({
     },
     {
       path: '/auth/oauth',
-      redirect: '/auth/ldap'
+      redirect: '/summary'
     },
     {
       path: '/auth/ldap',

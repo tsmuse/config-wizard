@@ -30,6 +30,7 @@
       updateAttribute( evt ){
         let id = evt.target.name,
           value = evt.target.value;
+        console.log(`id: ${id}, value: ${value}`);
         this.callback({ id, value });
         this.editing = false;
       },
